@@ -1,6 +1,7 @@
 import json
 import requests
 import re
+import lxml.html
 
 
 def create_ability_list():
@@ -21,5 +22,85 @@ def create_ability_list():
         json.dump(abilities_dict, file)
 
 
+def create_move_list():
+    move_id = 1
+    move_dict = {}
+    r = lambda s: requests.get(s)
+
+    while r(f"https://pokeapi.co/api/v2/move/{move_id}").status_code == 200:
+        try:
+            json_response = json.loads(r(f"https://pokeapi.co/api/v2/move/{move_id}").text)
+            name = json_response["name"].replace("-", "")
+            acc = json_response["accuracy"]
+            power = json_response["power"]
+            pp = json_response["pp"]
+            priority = json_response["priority"]
+            type = json_response["type"]["name"]
+            damage_type = json_response["damage_class"]["name"]
+            id = move_id
+
+            move_dict[name] = {}
+
+            move_dict[name]["power"] = power
+            move_dict[name]["accuracy"] = acc
+            move_dict[name]["pp"] = pp
+            move_dict[name]["priority"] = priority
+            move_dict[name]["type"] = type
+            move_dict[name]["damage_type"] = damage_type
+            move_dict[name]["id"] = id
+
+            print(f"Added {name}")
+        except:
+            print(f"An error occured")
+
+        move_id += 1
+
+    with open('../pokedex_data/moves.json', "w") as file:
+        json.dump(move_dict, file)
+
+
+def create_item_list():
+    item_id = 1
+    item_dict = {}
+    r = lambda s: requests.get(s)
+
+    for i in range(1, 1006):
+        if r(f"https://pokeapi.co/api/v2/item/{i}").status_code == 200:
+            try:
+                json_response = json.loads(r(f"https://pokeapi.co/api/v2/item/{i}").text)
+                name = json_response["name"].replace("-", "")
+                item_dict[name] = item_id
+                print(f"Added {name}")
+            except:
+                print(f"An error occured")
+
+            item_id += 1
+
+    with open('../pokedex_data/items.json', "w") as file:
+        json.dump(item_dict, file)
+
+def create_pokemon_list():
+    pokemon_dict = {}
+    r = lambda s: requests.get(s)
+
+    for i in range(1, 898):
+        json_response = json.loads(r(f"https://pokeapi.co/api/v2/pokemon/{i}").text)
+        name = json_response["name"]
+        types = []
+
+        try:
+            for i in range(2):
+                types.append(json_response["types"][i]["type"]["name"])
+        except:
+            pass
+
+        pokemon_dict[name] = {}
+        pokemon_dict[name]["types"] = types
+        pokemon_dict[name]["id"] = i
+        print(f"Added {name}")
+
+    with open('../pokedex_data/pokemon.json', "w") as file:
+        json.dump(pokemon_dict, file)
+
 if __name__ == "__main__":
-    create_ability_list()
+    create_pokemon_list()
